@@ -1574,13 +1574,8 @@
                     }
                 }
 
-                // 🌟 DEFAULT WELCOME MESSAGE (Agar Database khali ho) 🌟
                 if(posts.length === 0) {
-                    posts = [{ 
-                        type: 'text', 
-                        text: '🎉 <b>Welcome to Maa Nirmala DJ & Tent House!</b> 🎉<br><br>Our Live Global Feed is now active. Check back here for the latest event updates, live videos, and exclusive discount offers directly from Mr. Lalu Kumar!', 
-                        time: new Date().toLocaleDateString() 
-                    }];
+                    posts = [{ type: 'text', text: 'Welcome to Maa Nirmala DJ Live Feed! Check back here for updates, videos from our recent events, and exclusive discount offers.', time: new Date().toLocaleDateString() }];
                 }
 
                 gallery.innerHTML = posts.map(function(p) {
@@ -1609,10 +1604,6 @@
                         </div>
                     `;
                 }).join('');
-            }, function (error) {
-                // Agar Firebase locked hai toh error yahan dikhega
-                console.error("Firebase Error: ", error);
-                gallery.innerHTML = `<div class="feed-card"><div class="feed-offer" style="color:red; border-color:red;">⚠️ Cloud Connection Error.<br>Please ensure Firebase Database Rules are set to "true".</div></div>`;
             });
         }
 
@@ -1627,49 +1618,37 @@
             if(type !== 'text' && !media) { alert("Please provide a media URL!"); return; }
             if(!text) { alert("Please enter some text or caption!"); return; }
             
-            // Uploading Animation
-            const postBtn = document.querySelector('#adminPanel .f-btn');
-            const originalText = postBtn.innerHTML;
-            postBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PUBLISHING TO WORLD...';
-            
             // Push data to Google Firebase
             database.ref('mnd_feed').push({
                 type: type,
                 media: media,
                 text: text,
                 time: time
-            }).then(() => {
-                document.getElementById('admin-media').value = ''; 
-                document.getElementById('admin-text').value = '';
-                
-                if(typeof closeModal === 'function') closeModal(null, true); 
-                if(typeof showToast === 'function') showToast("Live Feed Published Globally!"); 
-                
-                postBtn.innerHTML = originalText;
-                
-                setTimeout(function() { 
-                    const gallerySection = document.getElementById('liveGallerySection');
-                    if(gallerySection) gallerySection.scrollIntoView({behavior: 'smooth'}); 
-                }, 500);
-            }).catch((error) => {
-                alert("⚠️ Upload Failed! Your Firebase Database Rules are locked. Please set read/write to true in Firebase Console.");
-                postBtn.innerHTML = originalText;
             });
+            
+            document.getElementById('admin-media').value = ''; 
+            document.getElementById('admin-text').value = '';
+            
+            if(typeof closeModal === 'function') closeModal(null, true); 
+            if(typeof showToast === 'function') showToast("Live Feed Published Globally!"); 
+            
+            setTimeout(function() { 
+                const gallerySection = document.getElementById('liveGallerySection');
+                if(gallerySection) gallerySection.scrollIntoView({behavior: 'smooth'}); 
+            }, 500);
         }
 
         function clearGallery() {
             if(typeof playTap === 'function') playTap();
             if(confirm("Delete ALL feed posts globally? This cannot be undone.")) {
-                database.ref('mnd_feed').remove().then(() => {
-                    if(typeof closeModal === 'function') closeModal(null, true); 
-                    if(typeof showToast === 'function') showToast("Feed Cleared Globally!");
-                });
+                database.ref('mnd_feed').remove(); 
+                if(typeof closeModal === 'function') closeModal(null, true); 
+                if(typeof showToast === 'function') showToast("Feed Cleared Globally!");
             }
         }
 
-        // PERFECT FIX: Loads instantly when page opens
-        document.addEventListener('DOMContentLoaded', loadGallery);
-        setTimeout(loadGallery, 1500); // Backup trigger
+        // Initialize gallery on load
+        window.onload = () => { loadGallery(); };
 
         // Forms and AI Handlers
         function submitFeedback() {
